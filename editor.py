@@ -1,6 +1,4 @@
 import os
-
-from logger import Logger
 from cursor import HighlightedZone
 
 
@@ -14,7 +12,6 @@ class Editor:
         screen.move(self.cursor_x, self.cursor_y)
         if os.path.exists('log.txt'):
             os.remove('log.txt')
-        self.logger = Logger('log.txt')
 
     @property
     def current_line_len(self):
