@@ -125,27 +125,42 @@ class Editor:
             self.cursor_x = min(self.cursor_x, self.next_line_len)
             self.cursor_y = min(len(self.text) - 1, self.cursor_y + 1)
 
-    def striped_current_line(self) -> list[str]:
+    def striped_current_line(self) -> str:
         """
         Возвращает строку без последнего символа
-        :return:
+        :return: обрезанная строка
         """
         return self.text[self.cursor_y][:-1]
 
-    def current_line_text(self):
+    def current_line_text(self) -> str:
+        """
+        Возвращает содержимое текущей строки
+        :return: строка,на которой стоит курсор
+        """
         return self.text[self.cursor_y]
 
-    def next_line_text(self):
+    def next_line_text(self) -> str:
+        """
+        Возвращает содержимое следующей строки, если такая имеется
+        :return: строка, идущая следующей после той, на которой стоит курсор
+        """
         if not self.cursor_on_last_line:
             return self.text[self.cursor_y + 1]
         raise IndexError(r"Next line doesn't exist")
 
-    def previous_line_text(self):
+    def previous_line_text(self) -> str:
+        """
+        Возвращает содержимое предыдущей строки, если такая имеется
+        :return: строка, идущая перед той, на которой стоит курсор
+        """
         if not self.cursor_on_last_line:
             return self.text[self.cursor_y - 1]
         raise IndexError(r"Previous line doesn't exist")
 
-    def delete(self):
+    def delete(self) -> None:
+        """
+        Удаление символа с использованием delete
+        """
         if self.cursor_x == self.line_end:
             if self.line_end:
                 self.text[self.cursor_y] = self.striped_current_line() + self.next_line_text()
@@ -156,7 +171,10 @@ class Editor:
                     self.text[self.cursor_y][self.cursor_x + 1:]
             )
 
-    def backspace(self):
+    def backspace(self) -> None:
+        """
+        Удаление символа с использованием backspace
+        """
         if self.cursor_on_line_start:
             if not self.cursor_on_first_line:
                 self.cursor_y -= 1
@@ -171,13 +189,20 @@ class Editor:
             )
             self.cursor_x -= 1
 
-    def press_enter(self):
+    def press_enter(self) -> None:
+        """
+        Обрабатывает нажатие клавиши enter
+        """
         self.text.insert(self.cursor_y + 1, self.text[self.cursor_y][self.cursor_x:])
         self.text[self.cursor_y] = self.text[self.cursor_y][:self.cursor_x] + '^'
         self.cursor_y += 1
         self.cursor_x = 0
 
-    def write_char(self, ch: str):
+    def write_char(self, ch: str) -> None:
+        """
+        Вставляет символ на позицию, где в данный момент находится курсор
+        :param ch: символ, который требуется вставить
+        """
         assert len(ch) == 1
         self.text[self.cursor_y] = (
             self.text[self.cursor_y][:self.cursor_x] +
@@ -213,7 +238,7 @@ class Editor:
         """
 
         logging.info(f"{x=}, {len(self.text)=}; {y=}, {(len(self.text[y]) - 1)=}")
-        logging.info((y < len(self.text), x < len(self.text[y]) - 1))
+        logging.info((y < len(self.text), x <= len(self.text[y]) - 1))
         if ch == "\n":
             self.press_enter_at(x, y)
         else:
@@ -221,4 +246,3 @@ class Editor:
                 self.text[y] = self.text[y][:x] + ch + self.text[y][x:]
                 if x < self.cursor_x and y == self.cursor_y:
                     self.move_cursor_right()
-

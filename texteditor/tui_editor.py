@@ -9,20 +9,25 @@ from asciimatics.event import KeyboardEvent, MouseEvent
 
 from editor import Editor
 
-
 logging.basicConfig(level=logging.INFO, filename="logs_client.txt", filemode="w",
                     format='%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S')
 
 
-def listen_to_server(sock, editor):
+def listen_to_server(sock, editor) -> None:
+    """
+    Слушает обновления с сервера
+    :param sock: сокет, по которому происхдит взаимодействие с сервером
+    :param editor: редактор
+    """
     while True:
         logging.info("Waiting for resp")
         data = sock.recv(1024)
+        logging.info("Response received")
         if data:
             response = json.loads(data.decode())
             logging.info(f"response: {response}")
-            if response['action'] == "write":
+            if response['action'] == "write" and 'success' not in response['data']:
                 x = response['data']['x']
                 y = response['data']['y']
                 symbol = response['data']['symbol']
@@ -32,24 +37,23 @@ def listen_to_server(sock, editor):
                 editor.text = response["data"]["content"]
 
 
-
-def run(screen, sock):
+def run(screen, sock) -> None:
+    # для теста, чтобы все конектились к одному файлу
     document_id = "1"
-
 
     # request = {
     #     "action": "create",
     #     "data": {
-    #         "name": "test_document"  # замените на имя вашего документа
+    #         "name": "test_document"
     #     }
     # }
     # sock.send(json.dumps(request).encode())
     #
-    # # Подключение к документу
+    #
     # response = json.loads(sock.recv(1024).decode())
-    # # TODO мб проверить это это вообще тот ответ
     # document_id = response['data']['document_id']
-    os.system('mode con: cols=80 lines=25')
+
+    # os.system('mode con: cols=80 lines=25')  # WINDOWS ONLY
     editor = Editor(screen)
 
     threading.Thread(target=listen_to_server, args=(sock, editor)).start()
@@ -60,8 +64,8 @@ def run(screen, sock):
             "document_id": document_id
         }
     }
-    sock.send(json.dumps(request).encode())
 
+    sock.send(json.dumps(request).encode())
 
     while True:
         event = editor.screen.get_event()
@@ -89,15 +93,12 @@ def run(screen, sock):
                 editor.delete()
             elif key == Screen.KEY_BACK:
                 editor.backspace()
-            # elif key == 393:  # shift + left # TODO: highlights
-            #
-            #     editor.highlighted_zone.append((editor.cursor_x, editor.cursor_y))
-            #     editor.move_cursor_left()
+
             elif key in (10, 13):  # enter key
                 request = {
                     "action": "write",
                     "data": {
-                        "document_id": document_id,  # замените на ID вашего документа
+                        "document_id": document_id,
                         "x": editor.cursor_x,
                         "y": editor.cursor_y,
                         "symbol": '\n'
@@ -110,7 +111,7 @@ def run(screen, sock):
                 request = {
                     "action": "write",
                     "data": {
-                        "document_id": document_id,  # замените на ID вашего документа
+                        "document_id": document_id,
                         "x": editor.cursor_x,
                         "y": editor.cursor_y,
                         "symbol": chr(key)
@@ -129,8 +130,7 @@ def run(screen, sock):
             editor.screen.print_at(line, 0, line_index)
 
         current_sy = editor.text[editor.cursor_y][editor.cursor_x]
-        # for x, y in editor.highlighted_chars:
-        #     editor.screen.print_at(editor.text[y][x], x, y, bg=1)
+
         editor.screen.print_at(current_sy, editor.cursor_x, editor.cursor_y, bg=1)
 
         editor.screen.move(editor.cursor_x, editor.cursor_y)
@@ -140,9 +140,8 @@ def run(screen, sock):
 if __name__ == '__main__':
     try:
         sock = socket.socket()
-        sock.connect(("localhost", 8002))
+        sock.connect(("localhost", 8000))
         with ManagedScreen() as screen:
             run(screen, sock)
     except KeyboardInterrupt:
         sock.close()
-
