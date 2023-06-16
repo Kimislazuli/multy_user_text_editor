@@ -3,6 +3,9 @@ from dataclasses import dataclass
 
 @dataclass
 class Position:
+    """
+    Класс, описывающий позицию курсора в тексте
+    """
     x: int
     y: int
 
@@ -14,6 +17,9 @@ class Position:
 
 @dataclass
 class HighlightedZone:
+    """
+    Класс для описания выделенного диапазона текста
+    """
     start: Position = None
     end: Position = None
 
