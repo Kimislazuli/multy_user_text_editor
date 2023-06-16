@@ -45,6 +45,7 @@ class Editor:
         """
         if not self.cursor_on_last_line:
             return len(self.text[self.cursor_y + 1]) - 1
+
         raise IndexError(r"Next line doesn't exist")
 
     @property
@@ -119,6 +120,8 @@ class Editor:
         """
         Смещает курсор вниз
         """
+        logging.info(self.cursor_on_last_line)
+        logging.info(self.cursor_y)
         if self.cursor_on_last_line:
             self.cursor_x = self.line_end
         else:
@@ -204,11 +207,14 @@ class Editor:
         :param ch: символ, который требуется вставить
         """
         assert len(ch) == 1
-        self.text[self.cursor_y] = (
-            self.text[self.cursor_y][:self.cursor_x] +
-            ch +
-            self.text[self.cursor_y][self.cursor_x:]
-        )
+        try:
+            self.text[self.cursor_y] = (
+                self.text[self.cursor_y][:self.cursor_x] +
+                ch +
+                self.text[self.cursor_y][self.cursor_x:]
+            )
+        except IndexError:
+            return
         self.cursor_x += 1
 
     def press_enter_at(self, x: int, y: int):

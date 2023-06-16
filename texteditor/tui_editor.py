@@ -107,6 +107,11 @@ def run(screen, sock) -> None:
                 sock.send(json.dumps(request).encode())
                 editor.press_enter()
 
+            try:
+                symbol = chr(key)
+            except ValueError:
+                continue
+
             else:
                 request = {
                     "action": "write",
@@ -129,7 +134,10 @@ def run(screen, sock) -> None:
         for line_index, line in enumerate(editor.text):
             editor.screen.print_at(line, 0, line_index)
 
-        current_sy = editor.text[editor.cursor_y][editor.cursor_x]
+        try:
+            current_sy = editor.text[editor.cursor_y][editor.cursor_x]
+        except IndexError:
+            continue
 
         editor.screen.print_at(current_sy, editor.cursor_x, editor.cursor_y, bg=1)
 
